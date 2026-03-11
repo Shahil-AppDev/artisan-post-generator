@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { History, LogOut, PlusCircle, Shield, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { PlusCircle, History, User, LogOut, Shield } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function DashboardPage() {
@@ -50,6 +50,7 @@ export default function DashboardPage() {
           <button
             onClick={handleLogout}
             className="p-3 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"
+            aria-label="Se déconnecter"
           >
             <LogOut size={20} />
           </button>

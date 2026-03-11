@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Upload, Loader2 } from 'lucide-react';
-import toast from 'react-hot-toast';
 import api from '@/lib/api';
+import { ArrowLeft, Loader2, Upload } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 const JOB_TYPES = [
   { value: 'climatisation', label: 'Climatisation installation' },
@@ -89,11 +89,8 @@ export default function CreatePostPage() {
     <div className="min-h-screen p-4 pb-20">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => router.back()}
-            className="p-2 bg-slate-800 rounded-lg hover:bg-slate-700"
-          >
-            <ArrowLeft size={24} />
+          <button onClick={() => router.push('/dashboard')} className="text-gray-400 hover:text-white" aria-label="Retour au tableau de bord">
+            <ArrowLeft className="h-6 w-6" />
           </button>
           <h1 className="text-2xl font-bold">Créer un post</h1>
         </div>
@@ -104,10 +101,10 @@ export default function CreatePostPage() {
               Type de travail *
             </label>
             <select
-              required
               value={jobType}
               onChange={(e) => setJobType(e.target.value)}
-              className="input-field"
+              className="w-full bg-gray-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="Type de métier"
             >
               <option value="">Sélectionnez...</option>
               {JOB_TYPES.map(type => (

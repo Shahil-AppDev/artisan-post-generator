@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Users, FileText, Activity } from 'lucide-react';
-import toast from 'react-hot-toast';
 import api from '@/lib/api';
+import { Activity, ArrowLeft, FileText, Users } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -40,10 +40,11 @@ export default function AdminPage() {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() => router.back()}
-            className="p-2 bg-slate-800 rounded-lg hover:bg-slate-700"
+            onClick={() => router.push('/dashboard')}
+            className="text-gray-400 hover:text-white"
+            aria-label="Retour au tableau de bord"
           >
-            <ArrowLeft size={24} />
+            <ArrowLeft className="h-6 w-6" />
           </button>
           <h1 className="text-2xl font-bold">Administration</h1>
         </div>
