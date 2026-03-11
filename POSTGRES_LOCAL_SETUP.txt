@@ -1,0 +1,34 @@
+CONFIGURATION POSTGRESQL LOCAL
+==============================
+
+Dans SQL Shell (psql) qui s'est ouvert :
+
+1. Serveur [localhost] : Appuyez sur ENTRÉE
+2. Base de données [postgres] : Tapez "artisan_posts" puis ENTRÉE
+3. Port [5432] : Appuyez sur ENTRÉE
+4. Utilisateur [postgres] : Appuyez sur ENTRÉE
+5. Mot de passe : Tapez votre mot de passe PostgreSQL
+
+Si vous ne connaissez pas le mot de passe :
+-------------------------------------------
+1. Fermez SQL Shell
+2. Allez sur https://neon.tech/
+3. Créez un compte gratuit
+4. Créez une base de données PostgreSQL
+5. Copiez la connection string
+6. Collez-la dans backend/.env ligne 4
+7. Sauvegardez
+8. Tapez "ok" dans le chat
+
+Si vous connaissez le mot de passe :
+------------------------------------
+1. Connectez-vous dans SQL Shell
+2. Tapez : \conninfo
+   (Cela confirmera que vous êtes connecté)
+3. Fermez SQL Shell
+4. Dans backend/.env ligne 4, remplacez :
+   DATABASE_URL=postgresql://postgres:VOTRE_MOT_DE_PASSE@localhost:5432/artisan_posts
+5. Sauvegardez le fichier
+6. Tapez "ok" dans le chat
+
+Je lancerai ensuite les migrations automatiquement.

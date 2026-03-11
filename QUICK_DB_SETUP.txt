@@ -1,0 +1,44 @@
+CONFIGURATION RAPIDE BASE DE DONNÉES (2 MINUTES)
+================================================
+
+Option 1: Neon.tech (Recommandé - Gratuit)
+-------------------------------------------
+1. Aller sur: https://neon.tech/
+2. Cliquer "Sign Up" (avec GitHub ou Google)
+3. Créer un nouveau projet
+4. Copier la "Connection String" fournie
+   Exemple: postgresql://user:pass@ep-xxx.region.aws.neon.tech/neondb?sslmode=require
+
+5. Ouvrir: backend/.env
+6. Ligne 4, remplacer par votre connection string
+7. Sauvegarder (Ctrl+S)
+8. Dans le terminal: cd backend && npm run migrate
+
+✅ TERMINÉ ! L'application sera fonctionnelle.
+
+
+Option 2: Supabase (Alternative gratuite)
+------------------------------------------
+1. Aller sur: https://supabase.com/
+2. Sign up gratuit
+3. Créer un nouveau projet
+4. Aller dans Settings > Database
+5. Copier la "Connection String" (mode "Session")
+6. Même procédure que Neon ci-dessus
+
+
+Option 3: PostgreSQL Local (si vous connaissez le mot de passe)
+----------------------------------------------------------------
+Dans backend/.env ligne 4:
+DATABASE_URL=postgresql://postgres:VOTRE_MOT_DE_PASSE@localhost:5432/artisan_posts
+
+Remplacez VOTRE_MOT_DE_PASSE par le vrai mot de passe.
+
+
+APRÈS CONFIGURATION
+===================
+L'application sera 100% fonctionnelle:
+- Frontend: http://localhost:3000
+- Backend: http://localhost:5001
+- Login: admin@artisan.com / Admin123!Change
+- Génération AI avec DeepSeek activée
