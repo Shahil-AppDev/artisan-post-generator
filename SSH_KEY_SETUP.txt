@@ -1,0 +1,80 @@
+═══════════════════════════════════════════════════════════════
+  NOUVELLE CLÉ SSH POUR LE SERVEUR HETZNER
+═══════════════════════════════════════════════════════════════
+
+✅ Clé SSH créée avec succès !
+
+Nom : hetzner_jh2o
+Emplacement : C:\Users\DarkNode\.ssh\hetzner_jh2o
+Type : ed25519 (sans passphrase)
+
+═══════════════════════════════════════════════════════════════
+  CLÉ PUBLIQUE À AJOUTER SUR LE SERVEUR
+═══════════════════════════════════════════════════════════════
+
+Voir ci-dessous la clé publique complète.
+
+═══════════════════════════════════════════════════════════════
+  MÉTHODE 1 : VIA PANNEAU HETZNER CLOUD
+═══════════════════════════════════════════════════════════════
+
+1. Connectez-vous à https://console.hetzner.cloud
+2. Allez dans votre projet
+3. Menu "Security" > "SSH Keys"
+4. Cliquez "Add SSH Key"
+5. Collez la clé publique (voir ci-dessous)
+6. Nom : "hetzner-jh2o-artisan"
+7. Cliquez "Add SSH Key"
+
+═══════════════════════════════════════════════════════════════
+  MÉTHODE 2 : DIRECTEMENT SUR LE SERVEUR
+═══════════════════════════════════════════════════════════════
+
+Si vous avez déjà accès SSH au serveur :
+
+ssh root@jh2o.business-services-idf.xyz
+
+Puis exécutez :
+
+echo 'VOTRE_CLE_PUBLIQUE_ICI' >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+
+═══════════════════════════════════════════════════════════════
+  TESTER LA CONNEXION
+═══════════════════════════════════════════════════════════════
+
+Une fois la clé ajoutée, testez la connexion :
+
+ssh -i "$env:USERPROFILE\.ssh\hetzner_jh2o" root@jh2o.business-services-idf.xyz
+
+Si la connexion fonctionne, vous verrez le prompt du serveur.
+
+═══════════════════════════════════════════════════════════════
+  DÉPLOYER L'APPLICATION
+═══════════════════════════════════════════════════════════════
+
+Avec la nouvelle clé, vous pouvez déployer :
+
+ssh -i "$env:USERPROFILE\.ssh\hetzner_jh2o" root@jh2o.business-services-idf.xyz "bash -s" < DEPLOY_COMPLETE.sh
+
+Ou connectez-vous et exécutez le script manuellement.
+
+═══════════════════════════════════════════════════════════════
+  METTRE À JOUR GITHUB ACTIONS
+═══════════════════════════════════════════════════════════════
+
+Pour que GitHub Actions utilise cette clé :
+
+Get-Content "$env:USERPROFILE\.ssh\hetzner_jh2o" | gh secret set SSH_PRIVATE_KEY --repo Shahil-AppDev/artisan-post-generator
+
+═══════════════════════════════════════════════════════════════
+  RÉSUMÉ
+═══════════════════════════════════════════════════════════════
+
+✅ Clé SSH créée : hetzner_jh2o
+✅ Clé sans passphrase (pour automatisation)
+⏳ À ajouter sur le serveur (méthodes ci-dessus)
+⏳ Tester la connexion
+⏳ Déployer l'application
+
+═══════════════════════════════════════════════════════════════
