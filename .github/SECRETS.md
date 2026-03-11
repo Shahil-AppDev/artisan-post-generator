@@ -30,7 +30,7 @@ Pour que le déploiement automatique fonctionne, configurez ces secrets dans Git
 
 ## Comment ajouter les secrets
 
-1. Aller sur https://github.com/jh2o/artisan-post-generator/settings/secrets/actions
+1. Aller sur https://github.com/Shahil-AppDev/artisan-post-generator/settings/secrets/actions
 2. Cliquer sur "New repository secret"
 3. Nom : (ex: SSH_PRIVATE_KEY)
 4. Value : (coller la valeur)
