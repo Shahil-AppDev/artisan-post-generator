@@ -9,8 +9,12 @@ export const metadata: Metadata = {
   title: 'Artisan Post Generator',
   description: 'Générez des posts professionnels pour vos réalisations',
   manifest: '/manifest.json',
-  themeColor: '#3b82f6',
+  themeColor: '#1e293b',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/icon-192x192.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -25,12 +29,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <head>
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
-        <meta name="theme-color" content="#1e293b" />
-        <link rel="icon" href="/favicon.ico" />
-      </head>
       <body className={inter.className}>
         {children}
         <Toaster 
