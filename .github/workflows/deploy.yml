@@ -2,172 +2,174 @@ name: Deploy to Hetzner
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-    
-    - name: Deploy to Hetzner
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
-        HOST: jh2o.business-services-idf.xyz
-        USERNAME: root
-      run: |
-        # Setup SSH
-        mkdir -p ~/.ssh
-        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
-        chmod 600 ~/.ssh/id_ed25519
-        ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
-        
-        # Deploy backend
-        ssh -o StrictHostKeyChecking=no $USERNAME@$HOST << 'ENDSSH'
-          set -e
-          
-          # Create directory if not exists
-          mkdir -p /var/www/artisan-post-generator
-          cd /var/www/artisan-post-generator
-          
-          # Clone or pull latest code
-          if [ -d ".git" ]; then
-            git pull origin main
-          else
-            git clone https://github.com/${{ github.repository }} .
-          fi
-          
-          # Backend setup
-          cd backend
-          npm install --production
-          
-          # Create .env if not exists
-          if [ ! -f ".env" ]; then
-            cat > .env << 'EOF'
-        NODE_ENV=production
-        PORT=5002
-        DATABASE_URL=${{ secrets.DATABASE_URL }}
-        JWT_SECRET=${{ secrets.JWT_SECRET }}
-        JWT_EXPIRES_IN=7d
-        AI_PROVIDER=deepseek
-        AI_API_KEY=${{ secrets.AI_API_KEY }}
-        AI_MODEL=deepseek-chat
-        CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
-        CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
-        CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
-        N8N_WEBHOOK_URL=${{ secrets.N8N_WEBHOOK_URL }}
-        CORS_ORIGIN=https://jh2o.business-services-idf.xyz
-        ADMIN_EMAIL=admin@artisan.com
-        ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
-        EOF
-          fi
-          
-          # Run migrations
-          npm run migrate || true
-          
-          # Restart backend with PM2
-          pm2 delete artisan-backend || true
-          pm2 start src/server.js --name artisan-backend
-          pm2 save
-          
-          # Frontend setup
-          cd ../frontend
-          npm install
-          
-          # Create .env.production
-          cat > .env.production << 'EOF'
-        NEXT_PUBLIC_API_URL=https://jh2o.business-services-idf.xyz/api
-        EOF
-          
-          # Build frontend
-          npm run build
-          
-          # Restart frontend with PM2
-          pm2 delete artisan-frontend || true
-          pm2 start npm --name artisan-frontend -- start -- -p 3003
-          pm2 save
-          
-          echo "✅ Deployment completed successfully!"
-        ENDSSH
-    
-    - name: Configure Nginx (first time only)
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        HOST: jh2o.business-services-idf.xyz
-        USERNAME: root
-      run: |
-        ssh -o StrictHostKeyChecking=no $USERNAME@$HOST << 'ENDSSH'
-          # Check if nginx config exists
-          if [ ! -f "/etc/nginx/sites-available/artisan-post-generator" ]; then
-            cat > /etc/nginx/sites-available/artisan-post-generator << 'EOF'
-        server {
-            listen 80;
-            server_name jh2o.business-services-idf.xyz;
-            
-            # Redirect to HTTPS
-            return 301 https://$server_name$request_uri;
-        }
 
-        server {
-            listen 443 ssl http2;
-            server_name jh2o.business-services-idf.xyz;
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Deploy to Hetzner
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
+          HOST: jh2o.business-services-idf.xyz
+          USERNAME: root
+        run: |
+          # Setup SSH with ssh-agent
+          eval $(ssh-agent -s)
+          echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - 
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+          # Deploy backend
+          ssh -o StrictHostKeyChecking=no $USERNAME@$HOST << 'ENDSSH'
+            set -e
             
-            # SSL certificates (will be configured by certbot)
-            ssl_certificate /etc/letsencrypt/live/jh2o.business-services-idf.xyz/fullchain.pem;
-            ssl_certificate_key /etc/letsencrypt/live/jh2o.business-services-idf.xyz/privkey.pem;
+            # Create directory if not exists
+            mkdir -p /var/www/artisan-post-generator
+            cd /var/www/artisan-post-generator
             
-            # Frontend
-            location / {
-                proxy_pass http://localhost:3003;
-                proxy_http_version 1.1;
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header Connection 'upgrade';
-                proxy_set_header Host $host;
-                proxy_cache_bypass $http_upgrade;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $scheme;
-            }
+            # Clone or pull latest code
+            if [ -d ".git" ]; then
+              git pull origin main
+            else
+              git clone https://github.com/${{ github.repository }} .
+            fi
             
-            # Backend API
-            location /api {
-                rewrite ^/api/(.*) /$1 break;
-                proxy_pass http://localhost:5002;
-                proxy_http_version 1.1;
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header Connection 'upgrade';
-                proxy_set_header Host $host;
-                proxy_cache_bypass $http_upgrade;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $scheme;
-            }
+            # Backend setup
+            cd backend
+            npm install --production
             
-            # Security headers
-            add_header X-Frame-Options "SAMEORIGIN" always;
-            add_header X-Content-Type-Options "nosniff" always;
-            add_header X-XSS-Protection "1; mode=block" always;
+            # Create .env if not exists
+            if [ ! -f ".env" ]; then
+              cat > .env << 'EOF'
+          NODE_ENV=production
+          PORT=5002
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRES_IN=7d
+          AI_PROVIDER=deepseek
+          AI_API_KEY=${{ secrets.AI_API_KEY }}
+          AI_MODEL=deepseek-chat
+          CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
+          N8N_WEBHOOK_URL=${{ secrets.N8N_WEBHOOK_URL }}
+          CORS_ORIGIN=https://jh2o.business-services-idf.xyz
+          ADMIN_EMAIL=admin@artisan.com
+          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+          EOF
+            fi
             
-            client_max_body_size 50M;
-        }
-        EOF
+            # Run migrations
+            npm run migrate || true
             
-            # Enable site
-            ln -sf /etc/nginx/sites-available/artisan-post-generator /etc/nginx/sites-enabled/
+            # Restart backend with PM2
+            pm2 delete artisan-backend || true
+            pm2 start src/server.js --name artisan-backend
+            pm2 save
             
-            # Test nginx config
-            nginx -t && systemctl reload nginx
+            # Frontend setup
+            cd ../frontend
+            npm install
             
-            # Install SSL certificate
-            certbot --nginx -d jh2o.business-services-idf.xyz --non-interactive --agree-tos --email admin@business-services-idf.xyz || echo "SSL setup will be done manually"
-          fi
-        ENDSSH
+            # Create .env.production
+            cat > .env.production << 'EOF'
+          NEXT_PUBLIC_API_URL=https://jh2o.business-services-idf.xyz/api
+          EOF
+            
+            # Build frontend
+            npm run build
+            
+            # Restart frontend with PM2
+            pm2 delete artisan-frontend || true
+            pm2 start npm --name artisan-frontend -- start -- -p 3003
+            pm2 save
+            
+            echo "✅ Deployment completed successfully!"
+          ENDSSH
+
+      - name: Configure Nginx (first time only)
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          HOST: jh2o.business-services-idf.xyz
+          USERNAME: root
+        run: |
+          ssh -o StrictHostKeyChecking=no $USERNAME@$HOST << 'ENDSSH'
+            # Check if nginx config exists
+            if [ ! -f "/etc/nginx/sites-available/artisan-post-generator" ]; then
+              cat > /etc/nginx/sites-available/artisan-post-generator << 'EOF'
+          server {
+              listen 80;
+              server_name jh2o.business-services-idf.xyz;
+              
+              # Redirect to HTTPS
+              return 301 https://$server_name$request_uri;
+          }
+
+          server {
+              listen 443 ssl http2;
+              server_name jh2o.business-services-idf.xyz;
+              
+              # SSL certificates (will be configured by certbot)
+              ssl_certificate /etc/letsencrypt/live/jh2o.business-services-idf.xyz/fullchain.pem;
+              ssl_certificate_key /etc/letsencrypt/live/jh2o.business-services-idf.xyz/privkey.pem;
+              
+              # Frontend
+              location / {
+                  proxy_pass http://localhost:3003;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host $host;
+                  proxy_cache_bypass $http_upgrade;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+              }
+              
+              # Backend API
+              location /api {
+                  rewrite ^/api/(.*) /$1 break;
+                  proxy_pass http://localhost:5002;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host $host;
+                  proxy_cache_bypass $http_upgrade;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+              }
+              
+              # Security headers
+              add_header X-Frame-Options "SAMEORIGIN" always;
+              add_header X-Content-Type-Options "nosniff" always;
+              add_header X-XSS-Protection "1; mode=block" always;
+              
+              client_max_body_size 50M;
+          }
+          EOF
+              
+              # Enable site
+              ln -sf /etc/nginx/sites-available/artisan-post-generator /etc/nginx/sites-enabled/
+              
+              # Test nginx config
+              nginx -t && systemctl reload nginx
+              
+              # Install SSL certificate
+              certbot --nginx -d jh2o.business-services-idf.xyz --non-interactive --agree-tos --email admin@business-services-idf.xyz || echo "SSL setup will be done manually"
+            fi
+          ENDSSH
