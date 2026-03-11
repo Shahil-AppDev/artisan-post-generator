@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, CheckCircle } from 'lucide-react';
-import toast from 'react-hot-toast';
 import api from '@/lib/api';
+import { ArrowLeft, Calendar, CheckCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function HistoryPage() {
   const router = useRouter();
@@ -52,6 +52,7 @@ export default function HistoryPage() {
           <button
             onClick={() => router.back()}
             className="p-2 bg-slate-800 rounded-lg hover:bg-slate-700"
+            aria-label="Retour"
           >
             <ArrowLeft size={24} />
           </button>
