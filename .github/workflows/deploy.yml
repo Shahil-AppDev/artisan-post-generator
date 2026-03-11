@@ -21,7 +21,6 @@ jobs:
       - name: Deploy to Hetzner
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
           HOST: jh2o.business-services-idf.xyz
           USERNAME: root
         run: |

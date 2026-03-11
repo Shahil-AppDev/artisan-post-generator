@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Copy, Send, Edit2, Check } from 'lucide-react';
-import toast from 'react-hot-toast';
 import api from '@/lib/api';
+import { ArrowLeft, Check, Copy, Send } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function PreviewPage() {
   const router = useRouter();
@@ -75,9 +75,10 @@ export default function PreviewPage() {
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => router.push('/dashboard')}
-            className="p-2 bg-slate-800 rounded-lg hover:bg-slate-700"
+            className="text-gray-400 hover:text-white"
+            aria-label="Retour au tableau de bord"
           >
-            <ArrowLeft size={24} />
+            <ArrowLeft className="h-6 w-6" />
           </button>
           <h1 className="text-2xl font-bold">Aperçu du post</h1>
         </div>
@@ -104,15 +105,17 @@ export default function PreviewPage() {
               <h3 className="font-semibold">Texte du post</h3>
               {!editing ? (
                 <button
-                  onClick={() => setEditing(true)}
-                  className="p-2 bg-slate-700 rounded-lg hover:bg-slate-600"
+                  onClick={handleCopy}
+                  className="p-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
+                  aria-label="Copier le contenu"
                 >
-                  <Edit2 size={18} />
+                  <Copy className="h-5 w-5" />
                 </button>
               ) : (
                 <button
                   onClick={handleSave}
                   className="p-2 bg-green-600 rounded-lg hover:bg-green-700"
+                  aria-label="Sauvegarder le post"
                 >
                   <Check size={18} />
                 </button>
@@ -123,8 +126,8 @@ export default function PreviewPage() {
               <textarea
                 value={editedText}
                 onChange={(e) => setEditedText(e.target.value)}
-                className="input-field resize-none"
-                rows={12}
+                className="w-full h-64 bg-gray-700 text-white rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Contenu du post"
               />
             ) : (
               <div className="whitespace-pre-wrap text-slate-200 bg-slate-900 p-4 rounded-lg">
