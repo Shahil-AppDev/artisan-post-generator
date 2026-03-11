@@ -1,0 +1,59 @@
+═══════════════════════════════════════════════════════════════
+  DÉPLOIEMENT FRONTEND ARTISAN - PORT 3003 LIBRE ✅
+═══════════════════════════════════════════════════════════════
+
+✅ Port 5002 : Occupé par artisan-backend (ID: 4) - OK
+✅ Port 3003 : LIBRE - Parfait pour le frontend
+
+═══════════════════════════════════════════════════════════════
+  COMMANDES À EXÉCUTER MAINTENANT
+═══════════════════════════════════════════════════════════════
+
+Copiez-collez ces commandes dans votre terminal SSH :
+
+# 1. Aller dans le répertoire frontend
+cd /var/www/artisan-post-generator/frontend
+
+# 2. Installer les dépendances
+npm install
+
+# 3. Créer .env.production
+cat > .env.production << 'EOF'
+NEXT_PUBLIC_API_URL=https://jh2o.business-services-idf.xyz/api
+EOF
+
+# 4. Build du frontend
+npm run build
+
+# 5. Démarrer le frontend avec PM2 sur le port 3003
+pm2 delete artisan-frontend 2>/dev/null || true
+pm2 start npm --name artisan-frontend -- start -- -p 3003
+pm2 save
+
+# 6. Vérifier que tout fonctionne
+pm2 status
+pm2 logs artisan-frontend --lines 20
+
+# 7. Tester les endpoints
+curl http://localhost:5002/
+curl http://localhost:3003/
+
+═══════════════════════════════════════════════════════════════
+  RÉSULTAT ATTENDU
+═══════════════════════════════════════════════════════════════
+
+Vous devriez voir dans pm2 list :
+- artisan-backend (ID: 4) : online - port 5002
+- artisan-frontend (nouveau) : online - port 3003
+
+═══════════════════════════════════════════════════════════════
+  APRÈS LE DÉPLOIEMENT
+═══════════════════════════════════════════════════════════════
+
+Il faudra vérifier/configurer Nginx pour que :
+- https://jh2o.business-services-idf.xyz/ → frontend (port 3003)
+- https://jh2o.business-services-idf.xyz/api → backend (port 5002)
+
+Mais d'abord, déployons le frontend ! 🚀
+
+═══════════════════════════════════════════════════════════════

@@ -1,0 +1,65 @@
+═══════════════════════════════════════════════════════════════
+  ACCÈS SERVEUR HETZNER - ARTISAN POST GENERATOR
+═══════════════════════════════════════════════════════════════
+
+Serveur : jh2o.business-services-idf.xyz
+IP : 65.21.104.251
+Utilisateur : root
+Passphrase : Shahil742445!!
+
+═══════════════════════════════════════════════════════════════
+  CONNEXION SSH
+═══════════════════════════════════════════════════════════════
+
+ssh root@jh2o.business-services-idf.xyz
+
+Ou avec IP :
+
+ssh root@65.21.104.251
+
+═══════════════════════════════════════════════════════════════
+  DÉPLOIEMENT RAPIDE
+═══════════════════════════════════════════════════════════════
+
+Une fois connecté, exécutez :
+
+curl -sSL https://raw.githubusercontent.com/Shahil-AppDev/artisan-post-generator/main/DEPLOY_COMPLETE.sh | bash
+
+Ou copiez les commandes depuis COMMANDES_SERVEUR.txt
+
+═══════════════════════════════════════════════════════════════
+  INFORMATIONS APPLICATION
+═══════════════════════════════════════════════════════════════
+
+URL Production : https://jh2o.business-services-idf.xyz
+Login Admin : admin@artisan.com
+Password Admin : Admin2024!Secure
+
+Base de données : artisan_posts
+DB User : artisan_user
+DB Password : Artisan2024Secure
+
+Backend Port : 5002
+Frontend Port : 3003
+
+═══════════════════════════════════════════════════════════════
+  COMMANDES UTILES
+═══════════════════════════════════════════════════════════════
+
+# Voir les services
+pm2 status
+
+# Logs
+pm2 logs artisan-backend
+pm2 logs artisan-frontend
+
+# Redémarrer
+pm2 restart artisan-backend
+pm2 restart artisan-frontend
+
+# Mettre à jour depuis GitHub
+cd /var/www/artisan-post-generator
+git pull origin main
+cd frontend && npm run build && pm2 restart artisan-frontend
+
+═══════════════════════════════════════════════════════════════

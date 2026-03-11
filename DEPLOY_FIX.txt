@@ -1,0 +1,85 @@
+═══════════════════════════════════════════════════════════════
+  DÉPLOIEMENT - LE RÉPERTOIRE EXISTE DÉJÀ
+═══════════════════════════════════════════════════════════════
+
+Le répertoire /var/www/artisan-post-generator existe déjà.
+Voici les commandes corrigées à exécuter :
+
+═══════════════════════════════════════════════════════════════
+  OPTION 1 : UTILISER LE RÉPERTOIRE EXISTANT
+═══════════════════════════════════════════════════════════════
+
+# 1. Ajouter la clé SSH GitHub Actions
+echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIJofrQfE1rYHVqXkajlnrzo040Ms/T/ZcQ4/EY1oIW8 github-actions-artisan-deploy' >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+
+# 2. Aller dans le répertoire et mettre à jour
+cd /var/www/artisan-post-generator
+rm -rf .git
+git init
+git remote add origin https://github.com/Shahil-AppDev/artisan-post-generator.git
+git fetch origin
+git checkout -f main
+
+# 3. Backend
+cd backend
+npm install --production
+
+cat > .env << 'EOF'
+NODE_ENV=production
+PORT=5002
+DATABASE_URL=postgresql://artisan_user:Artisan2024Secure@localhost:5432/artisan_posts
+JWT_SECRET=artisan_jwt_secret_2024_production_min_32_chars_long_secure
+JWT_EXPIRES_IN=7d
+AI_PROVIDER=deepseek
+AI_API_KEY=sk-b03741d7ef704e44aa96ea54cc81238f
+AI_MODEL=deepseek-chat
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+N8N_WEBHOOK_URL=https://your-n8n-instance.com/webhook/artisan-posts
+CORS_ORIGIN=https://jh2o.business-services-idf.xyz
+ADMIN_EMAIL=admin@artisan.com
+ADMIN_PASSWORD=Admin2024!Secure
+EOF
+
+npm run migrate
+pm2 delete artisan-backend 2>/dev/null || true
+pm2 start src/server.js --name artisan-backend
+pm2 save
+
+# 4. Frontend
+cd ../frontend
+npm install
+
+cat > .env.production << 'EOF'
+NEXT_PUBLIC_API_URL=https://jh2o.business-services-idf.xyz/api
+EOF
+
+npm run build
+pm2 delete artisan-frontend 2>/dev/null || true
+pm2 start npm --name artisan-frontend -- start -- -p 3003
+pm2 save
+
+# 5. Vérifier
+pm2 status
+
+═══════════════════════════════════════════════════════════════
+  OPTION 2 : SUPPRIMER ET RECOMMENCER
+═══════════════════════════════════════════════════════════════
+
+# Supprimer le répertoire existant
+rm -rf /var/www/artisan-post-generator
+
+# Puis relancer le script
+curl -sSL https://raw.githubusercontent.com/Shahil-AppDev/artisan-post-generator/main/DEPLOY_COMPLETE.sh | bash
+
+═══════════════════════════════════════════════════════════════
+  RECOMMANDATION
+═══════════════════════════════════════════════════════════════
+
+Utilisez l'OPTION 1 pour conserver les données existantes.
+
+Copiez-collez toutes les commandes de l'OPTION 1 dans votre terminal SSH.
+
+═══════════════════════════════════════════════════════════════

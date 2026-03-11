@@ -1,0 +1,71 @@
+═══════════════════════════════════════════════════════════════
+  AJOUTER LA CLÉ SSH POUR GITHUB ACTIONS
+═══════════════════════════════════════════════════════════════
+
+✅ Clé SSH créée avec succès !
+
+Emplacement : C:\Users\DarkNode\.ssh\github_actions_artisan
+
+═══════════════════════════════════════════════════════════════
+  ÉTAPE 1 : AJOUTER LA CLÉ SUR LE SERVEUR
+═══════════════════════════════════════════════════════════════
+
+1. Connectez-vous au serveur :
+
+   ssh root@jh2o.business-services-idf.xyz
+
+2. Ajoutez la clé publique (copiez-collez cette ligne complète) :
+
+echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIJofrQfE1rYHVqXkajlnrzo040Ms/T/ZcQ4/EY1oIW8 github-actions-artisan-deploy' >> ~/.ssh/authorized_keys
+
+3. Sécurisez les permissions :
+
+chmod 600 ~/.ssh/authorized_keys
+
+4. Vérifiez que la clé est bien ajoutée :
+
+cat ~/.ssh/authorized_keys | grep github-actions-artisan
+
+Vous devriez voir la ligne avec "github-actions-artisan-deploy"
+
+═══════════════════════════════════════════════════════════════
+  ÉTAPE 2 : METTRE À JOUR LE SECRET GITHUB
+═══════════════════════════════════════════════════════════════
+
+Sur votre machine locale (PowerShell), exécutez :
+
+Get-Content "$env:USERPROFILE\.ssh\github_actions_artisan" | gh secret set SSH_PRIVATE_KEY --repo Shahil-AppDev/artisan-post-generator
+
+═══════════════════════════════════════════════════════════════
+  ÉTAPE 3 : TESTER LA CONNEXION
+═══════════════════════════════════════════════════════════════
+
+Testez que la nouvelle clé fonctionne :
+
+ssh -i "$env:USERPROFILE\.ssh\github_actions_artisan" root@jh2o.business-services-idf.xyz "echo 'Connexion SSH réussie!'"
+
+Si vous voyez "Connexion SSH réussie!", c'est bon ! ✅
+
+═══════════════════════════════════════════════════════════════
+  ÉTAPE 4 : RELANCER LE WORKFLOW GITHUB ACTIONS
+═══════════════════════════════════════════════════════════════
+
+gh workflow run deploy.yml --repo Shahil-AppDev/artisan-post-generator
+
+Ou allez sur :
+https://github.com/Shahil-AppDev/artisan-post-generator/actions/workflows/deploy.yml
+
+Et cliquez sur "Run workflow"
+
+═══════════════════════════════════════════════════════════════
+  RÉSUMÉ
+═══════════════════════════════════════════════════════════════
+
+✅ Clé SSH générée : github_actions_artisan
+✅ Clé publique : ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIJofrQfE1rYHVqXkajlnrzo040Ms/T/ZcQ4/EY1oIW8
+⏳ À ajouter sur le serveur (commandes ci-dessus)
+⏳ À configurer dans GitHub Secrets (commande ci-dessus)
+
+Une fois ces étapes terminées, le déploiement automatique via GitHub Actions fonctionnera ! 🚀
+
+═══════════════════════════════════════════════════════════════

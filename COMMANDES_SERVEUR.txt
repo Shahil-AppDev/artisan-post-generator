@@ -1,0 +1,83 @@
+═══════════════════════════════════════════════════════════════
+  COMMANDES À EXÉCUTER SUR LE SERVEUR
+═══════════════════════════════════════════════════════════════
+
+Vous êtes connecté au serveur ! Parfait ! ✅
+
+Maintenant, exécutez ces commandes dans l'ordre :
+
+═══════════════════════════════════════════════════════════════
+  OPTION 1 : TÉLÉCHARGER ET EXÉCUTER LE SCRIPT
+═══════════════════════════════════════════════════════════════
+
+curl -sSL https://raw.githubusercontent.com/Shahil-AppDev/artisan-post-generator/main/DEPLOY_COMPLETE.sh -o deploy.sh
+bash deploy.sh
+
+═══════════════════════════════════════════════════════════════
+  OPTION 2 : COMMANDES DIRECTES (SI OPTION 1 NE FONCTIONNE PAS)
+═══════════════════════════════════════════════════════════════
+
+# 1. Ajouter la clé SSH GitHub Actions
+echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIJofrQfE1rYHVqXkajlnrzo040Ms/T/ZcQ4/EY1oIW8 github-actions-artisan-deploy' >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+
+# 2. Créer le répertoire et cloner le code
+mkdir -p /var/www/artisan-post-generator
+cd /var/www/artisan-post-generator
+git clone https://github.com/Shahil-AppDev/artisan-post-generator .
+
+# 3. Backend
+cd backend
+npm install --production
+
+cat > .env << 'EOF'
+NODE_ENV=production
+PORT=5002
+DATABASE_URL=postgresql://artisan_user:Artisan2024Secure@localhost:5432/artisan_posts
+JWT_SECRET=artisan_jwt_secret_2024_production_min_32_chars_long_secure
+JWT_EXPIRES_IN=7d
+AI_PROVIDER=deepseek
+AI_API_KEY=sk-b03741d7ef704e44aa96ea54cc81238f
+AI_MODEL=deepseek-chat
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+N8N_WEBHOOK_URL=https://your-n8n-instance.com/webhook/artisan-posts
+CORS_ORIGIN=https://jh2o.business-services-idf.xyz
+ADMIN_EMAIL=admin@artisan.com
+ADMIN_PASSWORD=Admin2024!Secure
+EOF
+
+npm run migrate
+pm2 delete artisan-backend 2>/dev/null || true
+pm2 start src/server.js --name artisan-backend
+pm2 save
+
+# 4. Frontend
+cd ../frontend
+npm install
+
+cat > .env.production << 'EOF'
+NEXT_PUBLIC_API_URL=https://jh2o.business-services-idf.xyz/api
+EOF
+
+npm run build
+pm2 delete artisan-frontend 2>/dev/null || true
+pm2 start npm --name artisan-frontend -- start -- -p 3003
+pm2 save
+
+# 5. Vérifier
+pm2 status
+
+═══════════════════════════════════════════════════════════════
+  RÉSULTAT ATTENDU
+═══════════════════════════════════════════════════════════════
+
+Vous devriez voir :
+✅ artisan-backend : online
+✅ artisan-frontend : online
+
+URL : https://jh2o.business-services-idf.xyz
+Login : admin@artisan.com / Admin2024!Secure
+
+═══════════════════════════════════════════════════════════════

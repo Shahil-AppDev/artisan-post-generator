@@ -1,0 +1,114 @@
+═══════════════════════════════════════════════════════════════
+  TESTER LE BACKEND ARTISAN
+═══════════════════════════════════════════════════════════════
+
+✅ Le backend répond !
+{"error":"Route not found"} 
+
+C'est normal car la route "/" n'existe pas.
+Il faut tester les vraies routes API.
+
+═══════════════════════════════════════════════════════════════
+  COMMANDES DE TEST
+═══════════════════════════════════════════════════════════════
+
+# 1. Tester la route de santé (health check)
+curl http://localhost:5002/health
+
+# 2. Tester la route d'authentification
+curl -X POST http://localhost:5002/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@artisan.com","password":"Admin2024!Secure"}'
+
+# 3. Vérifier les logs du backend
+pm2 logs artisan-backend --lines 50
+
+# 4. Vérifier que le backend écoute bien sur le port 5002
+sudo netstat -tulpn | grep 5002
+
+# 5. Tester le frontend
+curl http://localhost:3005/
+
+═══════════════════════════════════════════════════════════════
+  SI LA BASE DE DONNÉES N'EST PAS CONFIGURÉE
+═══════════════════════════════════════════════════════════════
+
+Les logs du backend montreront probablement une erreur de connexion.
+Dans ce cas, créez l'utilisateur PostgreSQL :
+
+sudo -u postgres psql
+CREATE USER artisan_user WITH PASSWORD 'Artisan2024Secure';
+CREATE DATABASE artisan_posts OWNER artisan_user;
+GRANT ALL PRIVILEGES ON DATABASE artisan_posts TO artisan_user;
+\q
+
+cd /var/www/artisan-post-generator/backend
+npm run migrate
+pm2 restart artisan-backend
+
+═══════════════════════════════════════════════════════════════
+  CONFIGURATION NGINX
+═══════════════════════════════════════════════════════════════
+
+Une fois que le backend et le frontend fonctionnent, configurez Nginx :
+
+# Vérifier si la config existe
+cat /etc/nginx/sites-available/artisan-post-generator
+
+# Si elle n'existe pas ou pointe vers le mauvais port, créer/modifier :
+sudo nano /etc/nginx/sites-available/artisan-post-generator
+
+# Contenu (adaptez selon votre domaine) :
+server {
+    listen 80;
+    server_name jh2o.business-services-idf.xyz;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name jh2o.business-services-idf.xyz;
+    
+    ssl_certificate /etc/letsencrypt/live/jh2o.business-services-idf.xyz/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/jh2o.business-services-idf.xyz/privkey.pem;
+    
+    # Frontend sur port 3005
+    location / {
+        proxy_pass http://localhost:3005;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+    
+    # Backend API sur port 5002
+    location /api {
+        rewrite ^/api/(.*) /$1 break;
+        proxy_pass http://localhost:5002;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+    }
+}
+
+# Activer et recharger
+sudo ln -sf /etc/nginx/sites-available/artisan-post-generator /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+
+═══════════════════════════════════════════════════════════════
+  COMMANDES À EXÉCUTER MAINTENANT
+═══════════════════════════════════════════════════════════════
+
+# 1. Vérifier les logs du backend
+pm2 logs artisan-backend --lines 50
+
+# 2. Tester le login
+curl -X POST http://localhost:5002/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@artisan.com","password":"Admin2024!Secure"}'
+
+# 3. Tester le frontend
+curl http://localhost:3005/
+
+═══════════════════════════════════════════════════════════════

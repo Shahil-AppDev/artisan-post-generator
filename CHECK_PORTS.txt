@@ -1,0 +1,58 @@
+═══════════════════════════════════════════════════════════════
+  VÉRIFIER LES PORTS OCCUPÉS SUR LE SERVEUR
+═══════════════════════════════════════════════════════════════
+
+Sur le serveur, exécutez ces commandes pour vérifier les ports :
+
+═══════════════════════════════════════════════════════════════
+  COMMANDES DE VÉRIFICATION
+═══════════════════════════════════════════════════════════════
+
+# Vérifier tous les ports en écoute
+sudo netstat -tulpn | grep LISTEN
+
+# Vérifier spécifiquement les ports 3003 et 5002
+sudo netstat -tulpn | grep -E ':(3003|5002)'
+
+# Alternative avec ss
+sudo ss -tulpn | grep -E ':(3003|5002)'
+
+# Vérifier les processus PM2
+pm2 list
+
+# Vérifier les processus Node.js
+ps aux | grep node
+
+═══════════════════════════════════════════════════════════════
+  SI LE PORT 3003 EST OCCUPÉ
+═══════════════════════════════════════════════════════════════
+
+Option 1 : Arrêter le processus existant
+pm2 delete <nom-du-processus>
+
+Option 2 : Utiliser un autre port (ex: 3004)
+# Dans le déploiement, changez :
+pm2 start npm --name artisan-frontend -- start -- -p 3004
+
+# Et mettez à jour Nginx pour pointer vers 3004
+
+═══════════════════════════════════════════════════════════════
+  PORTS UTILISÉS PAR ARTISAN POST GENERATOR
+═══════════════════════════════════════════════════════════════
+
+Backend : 5002
+Frontend : 3003
+
+═══════════════════════════════════════════════════════════════
+  COMMANDE À EXÉCUTER MAINTENANT
+═══════════════════════════════════════════════════════════════
+
+Copiez-collez ceci dans votre terminal SSH :
+
+sudo netstat -tulpn | grep -E ':(3003|5002)' && echo "---" && pm2 list
+
+Cela affichera :
+1. Les ports 3003 et 5002 s'ils sont occupés
+2. La liste des processus PM2
+
+═══════════════════════════════════════════════════════════════

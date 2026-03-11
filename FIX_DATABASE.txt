@@ -1,0 +1,81 @@
+═══════════════════════════════════════════════════════════════
+  PROBLÈME : ERREUR D'AUTHENTIFICATION POSTGRESQL
+═══════════════════════════════════════════════════════════════
+
+❌ Erreur détectée :
+password authentication failed for user "artisan_user"
+
+✅ Services déployés :
+- artisan-backend (ID: 4) : online - port 5002
+- artisan-frontend (ID: 5) : online - port 3005
+
+⚠️ La base de données n'est pas configurée correctement.
+
+═══════════════════════════════════════════════════════════════
+  SOLUTION : CRÉER/VÉRIFIER L'UTILISATEUR POSTGRESQL
+═══════════════════════════════════════════════════════════════
+
+Sur le serveur, exécutez ces commandes :
+
+# 1. Se connecter à PostgreSQL
+sudo -u postgres psql
+
+# 2. Vérifier si l'utilisateur existe
+\du
+
+# 3. Si l'utilisateur artisan_user n'existe pas, le créer :
+CREATE USER artisan_user WITH PASSWORD 'Artisan2024Secure';
+
+# 4. Si la base de données n'existe pas, la créer :
+CREATE DATABASE artisan_posts OWNER artisan_user;
+
+# 5. Donner tous les privilèges
+GRANT ALL PRIVILEGES ON DATABASE artisan_posts TO artisan_user;
+
+# 6. Quitter PostgreSQL
+\q
+
+# 7. Relancer les migrations
+cd /var/www/artisan-post-generator/backend
+npm run migrate
+
+# 8. Redémarrer le backend
+pm2 restart artisan-backend
+
+# 9. Vérifier les logs
+pm2 logs artisan-backend --lines 30
+
+═══════════════════════════════════════════════════════════════
+  ALTERNATIVE : SI L'UTILISATEUR EXISTE DÉJÀ
+═══════════════════════════════════════════════════════════════
+
+# Réinitialiser le mot de passe
+sudo -u postgres psql
+ALTER USER artisan_user WITH PASSWORD 'Artisan2024Secure';
+\q
+
+# Relancer les migrations
+cd /var/www/artisan-post-generator/backend
+npm run migrate
+pm2 restart artisan-backend
+
+═══════════════════════════════════════════════════════════════
+  APRÈS LA CORRECTION
+═══════════════════════════════════════════════════════════════
+
+# Vérifier que tout fonctionne
+pm2 status
+curl http://localhost:5002/
+curl http://localhost:3005/
+
+═══════════════════════════════════════════════════════════════
+  CONFIGURATION NGINX (À FAIRE APRÈS)
+═══════════════════════════════════════════════════════════════
+
+Il faudra configurer Nginx pour :
+- Frontend : https://jh2o.business-services-idf.xyz/ → port 3005
+- Backend : https://jh2o.business-services-idf.xyz/api → port 5002
+
+Mais d'abord, corrigeons la base de données !
+
+═══════════════════════════════════════════════════════════════

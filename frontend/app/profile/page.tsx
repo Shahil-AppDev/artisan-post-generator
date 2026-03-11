@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save } from 'lucide-react';
-import toast from 'react-hot-toast';
 import api from '@/lib/api';
+import { ArrowLeft, Save } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -49,6 +49,7 @@ export default function ProfilePage() {
           <button
             onClick={() => router.back()}
             className="p-2 bg-slate-800 rounded-lg hover:bg-slate-700"
+            aria-label="Retour au tableau de bord"
           >
             <ArrowLeft size={24} />
           </button>
@@ -66,6 +67,7 @@ export default function ProfilePage() {
               className="input-field"
               value={formData.company_name}
               onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+              aria-label="Nom de l'entreprise"
             />
           </div>
 
@@ -78,6 +80,7 @@ export default function ProfilePage() {
               className="input-field"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              aria-label="Téléphone"
             />
           </div>
 

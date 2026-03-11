@@ -1,0 +1,184 @@
+═══════════════════════════════════════════════════════════════
+  CONFIGURATION NGINX - ARTISAN POST GENERATOR
+═══════════════════════════════════════════════════════════════
+
+✅ Backend : fonctionne parfaitement (port 5002)
+✅ Frontend : déployé (port 3005)
+✅ CORS configuré pour : https://jh2o.business-services-idf.xyz
+
+Maintenant, configurons Nginx pour rendre l'application accessible !
+
+═══════════════════════════════════════════════════════════════
+  ÉTAPE 1 : VÉRIFIER LA CONFIGURATION NGINX EXISTANTE
+═══════════════════════════════════════════════════════════════
+
+# Vérifier si une config existe déjà
+ls -la /etc/nginx/sites-available/ | grep artisan
+
+# Voir la config actuelle de jh2o.business-services-idf.xyz
+cat /etc/nginx/sites-enabled/* | grep -A 20 "jh2o.business-services-idf.xyz"
+
+═══════════════════════════════════════════════════════════════
+  ÉTAPE 2 : CRÉER/MODIFIER LA CONFIGURATION NGINX
+═══════════════════════════════════════════════════════════════
+
+# Créer ou modifier la configuration
+sudo nano /etc/nginx/sites-available/artisan-post-generator
+
+# Copiez-collez ce contenu :
+
+server {
+    listen 80;
+    server_name jh2o.business-services-idf.xyz;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name jh2o.business-services-idf.xyz;
+    
+    # Certificats SSL (si déjà configurés)
+    ssl_certificate /etc/letsencrypt/live/jh2o.business-services-idf.xyz/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/jh2o.business-services-idf.xyz/privkey.pem;
+    
+    # Frontend Artisan (port 3005)
+    location / {
+        proxy_pass http://localhost:3005;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # Backend API Artisan (port 5002)
+    location /api {
+        rewrite ^/api/(.*) /$1 break;
+        proxy_pass http://localhost:5002;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    
+    client_max_body_size 50M;
+}
+
+# Sauvegarder : Ctrl+O, Entrée, Ctrl+X
+
+═══════════════════════════════════════════════════════════════
+  ÉTAPE 3 : ACTIVER LA CONFIGURATION
+═══════════════════════════════════════════════════════════════
+
+# Créer le lien symbolique
+sudo ln -sf /etc/nginx/sites-available/artisan-post-generator /etc/nginx/sites-enabled/
+
+# Tester la configuration Nginx
+sudo nginx -t
+
+# Si le test est OK, recharger Nginx
+sudo systemctl reload nginx
+
+═══════════════════════════════════════════════════════════════
+  ÉTAPE 4 : VÉRIFIER LES CERTIFICATS SSL
+═══════════════════════════════════════════════════════════════
+
+# Vérifier si les certificats existent
+ls -la /etc/letsencrypt/live/jh2o.business-services-idf.xyz/
+
+# Si les certificats n'existent pas, les créer avec Certbot
+sudo certbot --nginx -d jh2o.business-services-idf.xyz
+
+═══════════════════════════════════════════════════════════════
+  ÉTAPE 5 : TESTER L'APPLICATION
+═══════════════════════════════════════════════════════════════
+
+# Depuis le serveur
+curl https://jh2o.business-services-idf.xyz/
+
+# Depuis votre navigateur
+https://jh2o.business-services-idf.xyz/
+
+# Tester l'API
+curl https://jh2o.business-services-idf.xyz/api/health
+
+═══════════════════════════════════════════════════════════════
+  COMMANDES RAPIDES
+═══════════════════════════════════════════════════════════════
+
+# Tout en une fois (si vous êtes sûr) :
+
+# 1. Créer la config
+sudo tee /etc/nginx/sites-available/artisan-post-generator > /dev/null << 'EOF'
+server {
+    listen 80;
+    server_name jh2o.business-services-idf.xyz;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name jh2o.business-services-idf.xyz;
+    
+    ssl_certificate /etc/letsencrypt/live/jh2o.business-services-idf.xyz/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/jh2o.business-services-idf.xyz/privkey.pem;
+    
+    location / {
+        proxy_pass http://localhost:3005;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    location /api {
+        rewrite ^/api/(.*) /$1 break;
+        proxy_pass http://localhost:5002;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    client_max_body_size 50M;
+}
+EOF
+
+# 2. Activer et recharger
+sudo ln -sf /etc/nginx/sites-available/artisan-post-generator /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+
+# 3. Tester
+curl https://jh2o.business-services-idf.xyz/
+
+═══════════════════════════════════════════════════════════════
+  RÉSUMÉ
+═══════════════════════════════════════════════════════════════
+
+Ports utilisés :
+- Frontend : 3005
+- Backend : 5002
+
+URL finale : https://jh2o.business-services-idf.xyz/
+Login : admin@artisan.com / Admin2024!Secure
+
+═══════════════════════════════════════════════════════════════
